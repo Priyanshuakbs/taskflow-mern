@@ -6,38 +6,55 @@ const { Server } = require("socket.io");
 
 const connectDB = require("./config/db");
 
-// Connect MongoDB
+// ================= CONNECT DATABASE =================
+
 connectDB();
 
 const app = express();
 
-// Middlewares
-app.use(cors());
+// ================= MIDDLEWARES =================
+
+// CORS configuration (allow localhost + Vercel frontend)
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "https://taskflow-frontend-gray.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  })
+);
+
+// Parse JSON
 app.use(express.json());
 
 // Serve uploaded files
 app.use("/uploads", express.static("uploads"));
 
-// Routes
+// ================= ROUTES =================
+
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/tasks", require("./routes/taskRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
-app.use("/uploads", express.static("uploads"));
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("TaskFlow API Running...");
+  res.send("🚀 TaskFlow API Running...");
 });
 
-// Create HTTP server
+// ================= SOCKET.IO =================
+
 const server = http.createServer(app);
 
-// Socket.io setup
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: [
+      "http://localhost:3000",
+      "https://taskflow-frontend-gray.vercel.app"
+    ],
+    methods: ["GET", "POST"]
   }
 });
 
@@ -52,7 +69,8 @@ io.on("connection", (socket) => {
 // Make io accessible in controllers
 app.set("io", io);
 
-// Start server
+// ================= SERVER START =================
+
 const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
